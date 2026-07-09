@@ -1,0 +1,8 @@
+int main(){
+    int a,b;
+    a=10;
+    //hello
+    b=a+20;
+    if(a>b)
+        return a;
+}
