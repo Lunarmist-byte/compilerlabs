@@ -30,14 +30,14 @@ int main(){
     int n,i,start;
     printf("Enter the no of transitions:");
     scanf("%d",&n);
-    printf("Enter transitions(from to symbol:\n");
+    printf("Enter transitions(from to symbol):\n");
     for(i=0;i<n;i++){
         scanf("%d %d %c",&t[i].from,&t[i].to,&t[i].symbol);
     }
-    printf("Enter the state:");
+    printf("Enter the start state:");
     scanf("%d",&start);
     epsilonClosure(start,n);
-    printf("\nEpsilon Closure(%d)={ ",start);
+    printf("\nEpsilon Closure(%d) = { ",start);
     for(i=0;i<count;i++)
         printf("%d",closure[i]);
     printf("}\n");
