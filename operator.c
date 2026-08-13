@@ -18,15 +18,11 @@ void reduce()
     do
     {
         changed = 0;
-
-        /* i -> E */
         if (top >= 0 && stack[top] == 'i')
         {
             stack[top] = 'E';
             changed = 1;
         }
-
-        /* (E) -> E */
         if (top >= 2 &&
             stack[top] == ')' &&
             stack[top - 1] == 'E' &&
@@ -37,8 +33,6 @@ void reduce()
             stack[top + 1] = '\0';
             changed = 1;
         }
-
-        /* E op E -> E */
         if (top >= 2 &&
             stack[top] == 'E' &&
             stack[top - 2] == 'E' &&
@@ -71,15 +65,23 @@ int main()
     while (1)
     {
         printf("%-20s %-20s\n", stack, input + i);
-
-        if (stack[top] == '$' && input[i] == '$')
+        if (top == 1 &&
+            stack[0] == '$' &&
+            stack[1] == 'E' &&
+            input[i] == '$')
+        {
             break;
-
+        }
         if (input[i] == '$')
         {
             reduce();
-            if (stack[top] == 'E')
+
+            if (top == 1 &&
+                stack[0] == '$' &&
+                stack[1] == 'E')
+            {
                 break;
+            }
             else
             {
                 printf("\nString is NOT Accepted\n");
@@ -89,14 +91,19 @@ int main()
 
         push(input[i]);
         i++;
-
         reduce();
     }
 
-    if (top == 1 && stack[0] == '$' && stack[1] == 'E')
+    if (top == 1 &&
+        stack[0] == '$' &&
+        stack[1] == 'E')
+    {
         printf("\nString is Accepted\n");
+    }
     else
+    {
         printf("\nString is NOT Accepted\n");
+    }
 
     return 0;
 }
