@@ -1,62 +1,102 @@
 #include <stdio.h>
-#include <ctype.h>
 #include <string.h>
 
-char prec[9][9] = {
-    /*        +    -    *    /    ^    (    )    id   $  */
-    /* + */ {'>','>','<','<','<','<','>','<','>'},
-    /* - */ {'>','>','<','<','<','<','>','<','>'},
-    /* * */ {'>','>','>','>','<','<','>','<','>'},
-    /* / */ {'>','>','>','>','<','<','>','<','>'},
-    /* ^ */ {'>','>','>','>','<','<','>','<','>'},
-    /* ( */ {'<','<','<','<','<','<','=','<',' '},
-    /* ) */ {'>','>','>','>','>',' ','>',' ','>'},
-    /*id */ {'>','>','>','>','>',' ','>',' ','>'},
-    /* $ */ {'<','<','<','<','<','<',' ','<','$'}
-};
-char symbols[] = {'+','-','*','/','^','(',')','i','$'};
+char stack[100];
+char input[100];
+int top = -1;
 
-int index_of(char c) {
-    int i;
-    if (isalnum(c) && c != 'i') return 7;   /* any operand -> id */
-    for (i = 0; i < 9; i++)
-        if (symbols[i] == c) return i;
-    return 7;
+void push(char c)
+{
+    stack[++top] = c;
+    stack[top + 1] = '\0';
 }
 
-int main() {
-    char stack[50], input[50];
-    int top = 0, i = 0;
+void reduce()
+{
+    int changed;
 
-    printf("Enter input ending with $ (use i for id, e.g. i+i*i$): ");
+    do
+    {
+        changed = 0;
+
+        /* i -> E */
+        if (top >= 0 && stack[top] == 'i')
+        {
+            stack[top] = 'E';
+            changed = 1;
+        }
+
+        /* (E) -> E */
+        if (top >= 2 &&
+            stack[top] == ')' &&
+            stack[top - 1] == 'E' &&
+            stack[top - 2] == '(')
+        {
+            top -= 2;
+            stack[top] = 'E';
+            stack[top + 1] = '\0';
+            changed = 1;
+        }
+
+        /* E op E -> E */
+        if (top >= 2 &&
+            stack[top] == 'E' &&
+            stack[top - 2] == 'E' &&
+            (stack[top - 1] == '+' ||
+             stack[top - 1] == '-' ||
+             stack[top - 1] == '*' ||
+             stack[top - 1] == '/' ||
+             stack[top - 1] == '^'))
+        {
+            top -= 2;
+            stack[top] = 'E';
+            stack[top + 1] = '\0';
+            changed = 1;
+        }
+
+    } while (changed);
+}
+
+int main()
+{
+    int i = 0;
+
+    printf("Enter expression ending with $: ");
     scanf("%s", input);
 
-    stack[top] = '$'; stack[top+1] = '\0';
+    push('$');
 
-    printf("%-15s %-15s\n", "STACK", "INPUT");
-    while (1) {
-        printf("%-15s %-15s\n", stack, input + i);
-        char s = stack[top], a = input[i];
+    printf("\n%-20s %-20s\n", "STACK", "INPUT");
 
-        if (s == '$' && a == '$') {
-            printf("String is Accepted\n");
+    while (1)
+    {
+        printf("%-20s %-20s\n", stack, input + i);
+
+        if (stack[top] == '$' && input[i] == '$')
             break;
+
+        if (input[i] == '$')
+        {
+            reduce();
+            if (stack[top] == 'E')
+                break;
+            else
+            {
+                printf("\nString is NOT Accepted\n");
+                return 0;
+            }
         }
 
-        char rel = prec[index_of(s)][index_of(a)];
+        push(input[i]);
+        i++;
 
-        if (rel == '<' || rel == '=') {
-            stack[++top] = a; stack[top+1] = '\0';
-            i++;
-        } else if (rel == '>') {
-            while (top > 0 && prec[index_of(stack[top-1])][index_of(stack[top])] != '<')
-                top--;
-            top--;
-            stack[top+1] = '\0';
-        } else {
-            printf("String is not Accepted — syntax error\n");
-            break;
-        }
+        reduce();
     }
+
+    if (top == 1 && stack[0] == '$' && stack[1] == 'E')
+        printf("\nString is Accepted\n");
+    else
+        printf("\nString is NOT Accepted\n");
+
     return 0;
 }
