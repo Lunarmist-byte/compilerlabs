@@ -7,40 +7,33 @@ int top = -1;
 
 void push(char c)
 {
-    stack[++top] = c;
+    top++;
+    stack[top] = c;
     stack[top + 1] = '\0';
 }
 
 void reduce()
 {
-    int changed;
+    int changed = 1;
 
-    do
+    while (changed)
     {
         changed = 0;
-        if (top >= 0 && stack[top] == 'i')
+
+        if (top >= 1 &&
+            stack[top - 1] == 'i' &&
+            stack[top] == 'd')
         {
-            stack[top] = 'E';
-            changed = 1;
-        }
-        if (top >= 2 &&
-            stack[top] == ')' &&
-            stack[top - 1] == 'E' &&
-            stack[top - 2] == '(')
-        {
-            top -= 2;
+            top--;
             stack[top] = 'E';
             stack[top + 1] = '\0';
             changed = 1;
         }
-        if (top >= 2 &&
-            stack[top] == 'E' &&
-            stack[top - 2] == 'E' &&
-            (stack[top - 1] == '+' ||
-             stack[top - 1] == '-' ||
-             stack[top - 1] == '*' ||
-             stack[top - 1] == '/' ||
-             stack[top - 1] == '^'))
+
+        else if (top >= 2 &&
+                 stack[top - 2] == '(' &&
+                 stack[top - 1] == 'E' &&
+                 stack[top] == ')')
         {
             top -= 2;
             stack[top] = 'E';
@@ -48,7 +41,61 @@ void reduce()
             changed = 1;
         }
 
-    } while (changed);
+        else if (top >= 2 &&
+                 stack[top - 2] == 'E' &&
+                 stack[top - 1] == '+' &&
+                 stack[top] == 'E')
+        {
+            top -= 2;
+            stack[top] = 'E';
+            stack[top + 1] = '\0';
+            changed = 1;
+        }
+
+        else if (top >= 2 &&
+                 stack[top - 2] == 'E' &&
+                 stack[top - 1] == '-' &&
+                 stack[top] == 'E')
+        {
+            top -= 2;
+            stack[top] = 'E';
+            stack[top + 1] = '\0';
+            changed = 1;
+        }
+
+        else if (top >= 2 &&
+                 stack[top - 2] == 'E' &&
+                 stack[top - 1] == '*' &&
+                 stack[top] == 'E')
+        {
+            top -= 2;
+            stack[top] = 'E';
+            stack[top + 1] = '\0';
+            changed = 1;
+        }
+
+        else if (top >= 2 &&
+                 stack[top - 2] == 'E' &&
+                 stack[top - 1] == '/' &&
+                 stack[top] == 'E')
+        {
+            top -= 2;
+            stack[top] = 'E';
+            stack[top + 1] = '\0';
+            changed = 1;
+        }
+
+        else if (top >= 2 &&
+                 stack[top - 2] == 'E' &&
+                 stack[top - 1] == '^' &&
+                 stack[top] == 'E')
+        {
+            top -= 2;
+            stack[top] = 'E';
+            stack[top + 1] = '\0';
+            changed = 1;
+        }
+    }
 }
 
 int main()
@@ -56,7 +103,7 @@ int main()
     int i = 0;
 
     printf("Enter expression ending with $: ");
-    scanf("%s", input);
+    scanf("%99s", input);
 
     push('$');
 
@@ -65,44 +112,26 @@ int main()
     while (1)
     {
         printf("%-20s %-20s\n", stack, input + i);
+
         if (top == 1 &&
             stack[0] == '$' &&
             stack[1] == 'E' &&
             input[i] == '$')
         {
+            printf("\nString is Accepted\n");
             break;
         }
-        if (input[i] == '$')
-        {
-            reduce();
 
-            if (top == 1 &&
-                stack[0] == '$' &&
-                stack[1] == 'E')
-            {
-                break;
-            }
-            else
-            {
-                printf("\nString is NOT Accepted\n");
-                return 0;
-            }
+        if (input[i] == '\0')
+        {
+            printf("\nString is NOT Accepted\n");
+            break;
         }
 
         push(input[i]);
         i++;
-        reduce();
-    }
 
-    if (top == 1 &&
-        stack[0] == '$' &&
-        stack[1] == 'E')
-    {
-        printf("\nString is Accepted\n");
-    }
-    else
-    {
-        printf("\nString is NOT Accepted\n");
+        reduce();
     }
 
     return 0;
