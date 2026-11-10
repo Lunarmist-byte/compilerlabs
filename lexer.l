@@ -1,71 +1,27 @@
 %{
 #include <stdio.h>
-#include <stdlib.h>
-
-int line_number = 1;
+int line = 1;
 %}
-
-/* Definitions / Regular Aliases */
-DIGIT       [0-9]
-LETTER      [a-zA-Z_]
-ID          {LETTER}({LETTER}|{DIGIT})*
-INT_CONST   {DIGIT}+
-FLOAT_CONST {DIGIT}+\.{DIGIT}+([eE][+-]?{DIGIT}+)?
-
 %%
-
-\n              { line_number++; }
-[ \t\r]+        { /* Skip whitespace */ }
-
-"//".*          { /* Ignore single-line comments */ }
-
-"/*"([^*]|\*+[^*/])*\*+"/" { 
-    /* Ignore multi-line comments; count internal newlines */
-    for (int i = 0; yytext[i] != '\0'; i++) {
-        if (yytext[i] == '\n') line_number++;
-    }
-}
-
-    /* Keywords - must appear BEFORE the generic identifier pattern */
-"int"|"float"|"char"|"double"|"void"|"if"|"else"|"while"|"for"|"return"|"break"|"continue" {
-    printf("[Line %d] KEYWORD     : %s\n", line_number, yytext);
-}
-
-    /* Literals / Constants */
-{FLOAT_CONST}   { printf("[Line %d] FLOAT_CONST : %s\n", line_number, yytext); }
-{INT_CONST}     { printf("[Line %d] INT_CONST   : %s\n", line_number, yytext); }
-\"([^\\\"]|\\.)*\" { printf("[Line %d] STRING_LIT  : %s\n", line_number, yytext); }
-
-    /* Identifiers */
-{ID}            { printf("[Line %d] IDENTIFIER  : %s\n", line_number, yytext); }
-
-    /* Multi-character Operators */
-"=="|"!="|"<="|">="|"&&"|"||"|"++"|"--" {
-    printf("[Line %d] RELOP/LOGOP : %s\n", line_number, yytext);
-}
-
-    /* Single-character Operators and Delimiters */
-[+\-*/%=<>]     { printf("[Line %d] OPERATOR    : %s\n", line_number, yytext); }
-[;,(){}\[\]]    { printf("[Line %d] DELIMITER   : %s\n", line_number, yytext); }
-
-    /* Catch-all for unrecognized characters */
-.               { printf("[Line %d] ERROR (Unknown Token): %s\n", line_number, yytext); }
-
+\n                                          { line++; }
+[ \t]+                                      ;
+"#".*                                       ;
+"//".*                                      ;
+"/*"([^*]|\*+[^*/])*\*+"/"                  ;
+"int"|"float"|"char"|"if"|"else"|"while"|"for"|"return"|"void" { printf("Line %d: KEYWORD\t\t%s\n", line, yytext); }
+[a-zA-Z_][a-zA-Z0-9_]*                      { printf("Line %d: IDENTIFIER\t%s\n", line, yytext); }
+[0-9]+(\.[0-9]+)?                           { printf("Line %d: NUMBER\t\t%s\n", line, yytext); }
+\"[^\"\n]*\"                                { printf("Line %d: STRING\t\t%s\n", line, yytext); }
+"=="|"!="|"<="|">="|"<"|">"                 { printf("Line %d: RELATIONAL OP\t%s\n", line, yytext); }
+"="                                         { printf("Line %d: ASSIGNMENT OP\t%s\n", line, yytext); }
+"+"|"-"|"*"|"/"|"%"                         { printf("Line %d: ARITHMETIC OP\t%s\n", line, yytext); }
+[;,(){}\[\]]                                { printf("Line %d: SPECIAL SYMBOL\t%s\n", line, yytext); }
+.                                           { printf("Line %d: UNKNOWN\t\t%s\n", line, yytext); }
 %%
-
-int yywrap(void) {
-    return 1;
-}
-
-int main(int argc, char **argv) {
-    if (argc > 1) {
-        FILE *file = fopen(argv[1], "r");
-        if (!file) {
-            perror("Failed to open file");
-            return 1;
-        }
-        yyin = file;
-    }
+int yywrap() { return 1; }
+int main() {
+    yyin = fopen("input.c", "r");
+    if (!yyin) { printf("Create input.c first!\n"); return 1; }
     yylex();
     return 0;
 }
